@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "oneformer"
+description = "oneformer"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [
+    { name = "Guillaume Rochette", email = "guillaume.rochette@oxbotica.com" },
+]
+keywords = ["TODO"]
+classifiers = [
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+]
+dynamic = ["dependencies", "version"]
+
+[project.urls]
+homepage = "https://github.com/guillaume-rochette-oxb/OneFormer"
+documentation = "https://github.com/guillaume-rochette-oxb/OneFormer"
+repository = "https://github.com/guillaume-rochette-oxb/OneFormer"
+
+[tool.setuptools.dynamic]
+version = {attr = "oneformer.__version__"}
+dependencies = {file = ["requirements.txt"]}

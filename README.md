@@ -13,7 +13,7 @@
 
 This repo contains the code for our paper **OneFormer: One Transformer to Rule Universal Image Segmentation**.
 
-<img src="images/teaser.png" width="100%"/>
+<img src="teaser.png" width="100%"/>
 
 #### Features
 
@@ -22,7 +22,7 @@ This repo contains the code for our paper **OneFormer: One Transformer to Rule U
 - OneFormer uses a task-conditioned joint training strategy, uniformly sampling different ground truth domains (semantic instance, or panoptic) by deriving all labels from panoptic annotations to train its multi-task model.
 - OneFormer uses a task token to condition the model on the task in focus, making our architecture task-guided for training, and task-dynamic for inference, all with a single model.
 
-![OneFormer](images/oneformer.svg)
+![OneFormer](oneformer.svg)
 
 ## Contents
 
@@ -58,7 +58,7 @@ This repo contains the code for our paper **OneFormer: One Transformer to Rule U
 ## Dataset Preparation
 
 - We experiment on three major benchmark dataset: ADE20K, Cityscapes and COCO 2017.
-- Please see [Preparing Datasets for OneFormer](datasets/README.md) for complete instructions for preparing the datasets.
+- Please see [Preparing Datasets for OneFormer](oneformer/datasets/README.md) for complete instructions for preparing the datasets.
 
 ## Execution Instructions
 
@@ -75,14 +75,14 @@ This repo contains the code for our paper **OneFormer: One Transformer to Rule U
 ### Demo
 
 - We provide quick to run demos on Colab [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/SHI-Labs/OneFormer/blob/main/colab/oneformer_colab.ipynb) and Hugging Face Spaces [![Huggingface space](https://img.shields.io/badge/🤗-Huggingface%20Space-cyan.svg)](https://huggingface.co/spaces/shi-labs/OneFormer).
-- Please see [OneFormer Demo](demo/README.md) for command line instructions on running the demo.
+- Please see [OneFormer Demo](oneformer/demo/README.md) for command line instructions on running the demo.
 
 ## Results
 
-![Results](images/plots.svg)
+![Results](plots.svg)
 
 - &dagger; denotes the backbones were pretrained on ImageNet-22k.
-- Pre-trained models can be downloaded following the instructions given [under tools](tools/README.md/#download-pretrained-weights).
+- Pre-trained models can be downloaded following the instructions given [under tools](oneformer/tools/README.md/#download-pretrained-weights).
 
 ### ADE20K
 

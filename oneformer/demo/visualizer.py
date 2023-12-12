@@ -30,7 +30,7 @@ from detectron2.utils.file_io import PathManager
 import random
 
 random.seed(0)
-from demo.colormap import random_color, _COLORS
+from oneformer.demo.colormap import random_color, _COLORS
 
 logger = logging.getLogger(__name__)
 

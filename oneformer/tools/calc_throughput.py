@@ -22,7 +22,7 @@ from trainers.trainer import TPDefaultTrainer
 # fmt: off
 import os
 import sys
-sys.path.insert(1, os.path.join(sys.path[0], '..'))
+sys.path.insert(1, os.path.join(sys.path[0], '../..'))
 # fmt: on
 
 from oneformer import (

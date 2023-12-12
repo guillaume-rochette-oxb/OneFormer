@@ -15,7 +15,7 @@ Please see [Getting Started with Detectron2](https://github.com/facebookresearch
 
 - We provide a script `train_net.py`, that is made to train all the configs provided in OneFormer.
 
-- To train a model with "train_net.py", first setup the corresponding datasets following [datasets/README.md](./datasets/README.md).
+- To train a model with "train_net.py", first setup the corresponding datasets following [datasets/README.md](oneformer/datasets/README.md).
 
 - Be default, the model uses `task=panoptic` for evaluation during training.
 
@@ -42,4 +42,4 @@ python train_net.py --dist-url 'tcp://127.0.0.1:50164' \
 
 ## Inference Demo
 
-We provide a demo script for inference on images. For more information, please see [demo/README.md](demo/README.md).
+We provide a demo script for inference on images. For more information, please see [demo/README.md](oneformer/demo/README.md).

@@ -10,7 +10,7 @@ import torch
 import random
 # fmt: off
 import sys
-sys.path.insert(1, os.path.join(sys.path[0], '..'))
+sys.path.insert(1, os.path.join(sys.path[0], '../..'))
 # fmt: on
 
 import time
@@ -31,7 +31,7 @@ from oneformer import (
     add_dinat_config,
     add_convnext_config,
 )
-from demo.predictor import VisualizationDemo
+from oneformer.demo.demo import VisualizationDemo
 
 # constants
 WINDOW_NAME = "OneFormer Demo"

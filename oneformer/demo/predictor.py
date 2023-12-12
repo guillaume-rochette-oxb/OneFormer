@@ -9,8 +9,8 @@ import multiprocessing as mp
 import torch
 
 from detectron2.data import MetadataCatalog
-from demo.defaults import DefaultPredictor
-from demo.visualizer import ColorMode, Visualizer
+from oneformer.demo.defaults import DefaultPredictor
+from oneformer.demo.demo import ColorMode, Visualizer
 
 
 class VisualizationDemo(object):

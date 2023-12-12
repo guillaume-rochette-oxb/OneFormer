@@ -24,23 +24,28 @@ import torch.distributed as dist
 import diffdist.functional as diff_dist
 import numpy as np
 
+
 def dist_collect(x):
-    """ collect all tensor from all GPUs
+    """collect all tensor from all GPUs
     args:
         x: shape (mini_batch, ...)
     returns:
         shape (mini_batch * num_gpu, ...)
     """
     x = x.contiguous()
-    out_list = [torch.zeros_like(x, device=x.device, dtype=x.dtype).contiguous() for _ in range(dist.get_world_size())]
+    out_list = [
+        torch.zeros_like(x, device=x.device, dtype=x.dtype).contiguous()
+        for _ in range(dist.get_world_size())
+    ]
     out_list = diff_dist.all_gather(out_list, x)
     return torch.cat(out_list, dim=0).contiguous()
 
+
 def dice_loss(
-        inputs: torch.Tensor,
-        targets: torch.Tensor,
-        num_masks: float,
-    ):
+    inputs: torch.Tensor,
+    targets: torch.Tensor,
+    num_masks: float,
+):
     """
     Compute the DICE loss, similar to generalized IOU for masks
     Args:
@@ -58,16 +63,14 @@ def dice_loss(
     return loss.sum() / num_masks
 
 
-dice_loss_jit = torch.jit.script(
-    dice_loss
-)  # type: torch.jit.ScriptModule
+dice_loss_jit = torch.jit.script(dice_loss)  # type: torch.jit.ScriptModule
 
 
 def sigmoid_ce_loss(
-        inputs: torch.Tensor,
-        targets: torch.Tensor,
-        num_masks: float,
-    ):
+    inputs: torch.Tensor,
+    targets: torch.Tensor,
+    num_masks: float,
+):
     """
     Args:
         inputs: A float tensor of arbitrary shape.
@@ -83,9 +86,7 @@ def sigmoid_ce_loss(
     return loss.sum() / num_masks
 
 
-sigmoid_ce_loss_jit = torch.jit.script(
-    sigmoid_ce_loss
-)  # type: torch.jit.ScriptModule
+sigmoid_ce_loss_jit = torch.jit.script(sigmoid_ce_loss)  # type: torch.jit.ScriptModule
 
 
 def calculate_uncertainty(logits):
@@ -112,8 +113,18 @@ class SetCriterion(nn.Module):
         2) we supervise each pair of matched ground-truth / prediction (supervise class and box)
     """
 
-    def __init__(self, num_classes, matcher, weight_dict, eos_coef, losses,
-                 num_points, oversample_ratio, importance_sample_ratio, contrast_temperature=None):
+    def __init__(
+        self,
+        num_classes,
+        matcher,
+        weight_dict,
+        eos_coef,
+        losses,
+        num_points,
+        oversample_ratio,
+        importance_sample_ratio,
+        contrast_temperature=None,
+    ):
         """Create the criterion.
         Parameters:
             num_classes: number of object categories, omitting the special no-object category
@@ -139,18 +150,22 @@ class SetCriterion(nn.Module):
         self.importance_sample_ratio = importance_sample_ratio
         self.contrast_temperature = contrast_temperature
         if self.contrast_temperature is not None:
-            self.logit_scale = nn.Parameter(torch.ones([]) * np.log(1 / contrast_temperature))
-    
-    
+            self.logit_scale = nn.Parameter(
+                torch.ones([]) * np.log(1 / contrast_temperature)
+            )
+
     def loss_contrastive(self, outputs, targets, indices, num_masks):
         assert "contrastive_logits" in outputs
         assert "texts" in outputs
         image_x = outputs["contrastive_logits"].float()
-        
+
         batch_size = image_x.shape[0]
         # get label globally
         if is_dist_avail_and_initialized():
-            labels = torch.arange(batch_size, dtype=torch.long, device=image_x.device) + batch_size * dist.get_rank()
+            labels = (
+                torch.arange(batch_size, dtype=torch.long, device=image_x.device)
+                + batch_size * dist.get_rank()
+            )
         else:
             labels = torch.arange(batch_size, dtype=torch.long, device=image_x.device)
 
@@ -184,23 +199,37 @@ class SetCriterion(nn.Module):
         src_logits = outputs["pred_logits"].float()
 
         idx = self._get_src_permutation_idx(indices)
-        target_classes_o = torch.cat([t["labels"][J] for t, (_, J) in zip(targets, indices)])
+        target_classes_o = torch.cat(
+            [t["labels"][J] for t, (_, J) in zip(targets, indices)]
+        )
         target_classes = torch.full(
-            src_logits.shape[:2], self.num_classes, dtype=torch.int64, device=src_logits.device
+            src_logits.shape[:2],
+            self.num_classes,
+            dtype=torch.int64,
+            device=src_logits.device,
         )
         target_classes[idx] = target_classes_o
-        
-        ce_weight = torch.full(
-            src_logits.shape[:2], self.eos_coef, dtype=torch.float32, device=src_logits.device
-        )
-        ce_weight[idx] = torch.tensor(1.).to(target_classes.device)
 
-        loss_ce = F.cross_entropy(src_logits.transpose(1, 2), target_classes, self.empty_weight, reduce=False, reduction="none")
+        ce_weight = torch.full(
+            src_logits.shape[:2],
+            self.eos_coef,
+            dtype=torch.float32,
+            device=src_logits.device,
+        )
+        ce_weight[idx] = torch.tensor(1.0).to(target_classes.device)
+
+        loss_ce = F.cross_entropy(
+            src_logits.transpose(1, 2),
+            target_classes,
+            self.empty_weight,
+            reduce=False,
+            reduction="none",
+        )
         loss_ce = loss_ce.sum(1) / ce_weight.sum()
         loss_ce = loss_ce.sum()
         losses = {"loss_ce": loss_ce}
         return losses
-    
+
     def loss_masks(self, outputs, targets, indices, num_masks):
         """Compute the losses related to the masks: the focal loss and the dice loss.
         targets dicts must contain the key "masks" containing a tensor of dim [nb_target_boxes, h, w]
@@ -255,21 +284,25 @@ class SetCriterion(nn.Module):
 
     def _get_src_permutation_idx(self, indices):
         # permute predictions following indices
-        batch_idx = torch.cat([torch.full_like(src, i) for i, (src, _) in enumerate(indices)])
+        batch_idx = torch.cat(
+            [torch.full_like(src, i) for i, (src, _) in enumerate(indices)]
+        )
         src_idx = torch.cat([src for (src, _) in indices])
         return batch_idx, src_idx
 
     def _get_tgt_permutation_idx(self, indices):
         # permute targets following indices
-        batch_idx = torch.cat([torch.full_like(tgt, i) for i, (_, tgt) in enumerate(indices)])
+        batch_idx = torch.cat(
+            [torch.full_like(tgt, i) for i, (_, tgt) in enumerate(indices)]
+        )
         tgt_idx = torch.cat([tgt for (_, tgt) in indices])
         return batch_idx, tgt_idx
 
     def get_loss(self, loss, outputs, targets, indices, num_masks):
         loss_map = {
-            'labels': self.loss_labels,
-            'masks': self.loss_masks,
-            'contrastive': self.loss_contrastive,
+            "labels": self.loss_labels,
+            "masks": self.loss_masks,
+            "contrastive": self.loss_contrastive,
         }
         assert loss in loss_map, f"do you really want to compute {loss} loss?"
         return loss_map[loss](outputs, targets, indices, num_masks)
@@ -305,9 +338,11 @@ class SetCriterion(nn.Module):
             for i, aux_outputs in enumerate(outputs["aux_outputs"]):
                 indices = self.matcher(aux_outputs, targets)
                 for loss in self.losses:
-                    if loss == "contrastive": 
+                    if loss == "contrastive":
                         continue
-                    l_dict = self.get_loss(loss, aux_outputs, targets, indices, num_masks)
+                    l_dict = self.get_loss(
+                        loss, aux_outputs, targets, indices, num_masks
+                    )
                     l_dict = {k + f"_{i}": v for k, v in l_dict.items()}
                     losses.update(l_dict)
 

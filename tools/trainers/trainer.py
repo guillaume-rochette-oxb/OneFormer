@@ -1,4 +1,3 @@
-
 import logging
 import weakref
 from collections import OrderedDict
@@ -28,14 +27,13 @@ from detectron2.checkpoint import DetectionCheckpointer
 from detectron2.utils import comm
 from detectron2.utils.logger import setup_logger
 from .trainer_base import TPAMPTrainer, TPSimpleTrainer, TPTrainerBase
-from detectron2.engine import (
-    create_ddp_model
-)
+from detectron2.engine import create_ddp_model
 import numpy as np
 import detectron2.utils.comm as comm
 from detectron2.utils.events import CommonMetricPrinter, JSONWriter, TensorboardXWriter
 from detectron2.utils.file_io import PathManager
 from typing import Optional
+
 
 def default_writers(output_dir: str, max_iter: Optional[int] = None):
     """
@@ -55,6 +53,7 @@ def default_writers(output_dir: str, max_iter: Optional[int] = None):
         JSONWriter(os.path.join(output_dir, "metrics.json")),
         TensorboardXWriter(output_dir),
     ]
+
 
 class TPDefaultTrainer(TPTrainerBase):
     """
@@ -174,7 +173,11 @@ class TPDefaultTrainer(TPTrainerBase):
         # This is not always the best: if checkpointing has a different frequency,
         # some checkpoints may have more precise statistics than others.
         if comm.is_main_process():
-            ret.append(hooks.PeriodicCheckpointer(self.checkpointer, cfg.SOLVER.CHECKPOINT_PERIOD))
+            ret.append(
+                hooks.PeriodicCheckpointer(
+                    self.checkpointer, cfg.SOLVER.CHECKPOINT_PERIOD
+                )
+            )
 
         def test_and_save_results():
             self._last_eval_results = self.test(self.cfg, self.model)
@@ -334,7 +337,9 @@ Alternatively, you can call evaluation functions yourself (see Colab balloon tut
         bs = cfg.SOLVER.IMS_PER_BATCH = int(round(cfg.SOLVER.IMS_PER_BATCH * scale))
         lr = cfg.SOLVER.BASE_LR = cfg.SOLVER.BASE_LR * scale
         max_iter = cfg.SOLVER.MAX_ITER = int(round(cfg.SOLVER.MAX_ITER / scale))
-        warmup_iter = cfg.SOLVER.WARMUP_ITERS = int(round(cfg.SOLVER.WARMUP_ITERS / scale))
+        warmup_iter = cfg.SOLVER.WARMUP_ITERS = int(
+            round(cfg.SOLVER.WARMUP_ITERS / scale)
+        )
         cfg.SOLVER.STEPS = tuple(int(round(s / scale)) for s in cfg.SOLVER.STEPS)
         cfg.TEST.EVAL_PERIOD = int(round(cfg.TEST.EVAL_PERIOD / scale))
         cfg.SOLVER.CHECKPOINT_PERIOD = int(round(cfg.SOLVER.CHECKPOINT_PERIOD / scale))

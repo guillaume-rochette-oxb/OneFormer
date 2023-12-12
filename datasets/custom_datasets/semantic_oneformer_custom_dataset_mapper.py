@@ -71,12 +71,14 @@ class SemanticOneFormerCustomDatasetMapper:
 
         logger = logging.getLogger(__name__)
         mode = "training" if is_train else "inference"
-        logger.info(f"[{self.__class__.__name__}] Augmentations used in {mode}: {augmentations}")
+        logger.info(
+            f"[{self.__class__.__name__}] Augmentations used in {mode}: {augmentations}"
+        )
 
         self.class_names = self.meta.stuff_classes
         self.text_tokenizer = Tokenize(SimpleTokenizer(), max_seq_len=max_seq_len)
         self.task_tokenizer = Tokenize(SimpleTokenizer(), max_seq_len=task_seq_len)
-    
+
     @classmethod
     def from_config(cls, cfg, is_train=True):
         # Build augmentation
@@ -109,7 +111,8 @@ class SemanticOneFormerCustomDatasetMapper:
             "is_train": is_train,
             "meta": meta,
             "name": dataset_names[0],
-            "num_queries": cfg.MODEL.ONE_FORMER.NUM_OBJECT_QUERIES - cfg.MODEL.TEXT_ENCODER.N_CTX,
+            "num_queries": cfg.MODEL.ONE_FORMER.NUM_OBJECT_QUERIES
+            - cfg.MODEL.TEXT_ENCODER.N_CTX,
             "task_seq_len": cfg.INPUT.TASK_SEQ_LEN,
             "max_seq_len": cfg.INPUT.MAX_SEQ_LEN,
             "augmentations": augs,
@@ -120,14 +123,13 @@ class SemanticOneFormerCustomDatasetMapper:
         return ret
 
     def _get_texts(self, classes, num_class_obj):
-        
         classes = list(np.array(classes))
         texts = ["an semantic photo"] * self.num_queries
-        
+
         for class_id in classes:
             cls_name = self.class_names[class_id]
             num_class_obj[cls_name] += 1
-        
+
         num = 0
         for i, cls_name in enumerate(self.class_names):
             if num_class_obj[cls_name] > 0:
@@ -138,7 +140,7 @@ class SemanticOneFormerCustomDatasetMapper:
                     num += 1
 
         return texts
-    
+
     def __call__(self, dataset_dict):
         """
         Args:
@@ -147,7 +149,9 @@ class SemanticOneFormerCustomDatasetMapper:
         Returns:
             dict: a format that builtin models in detectron2 accept
         """
-        assert self.is_train, "SemanticOneFormerCustomDatasetMapper should only be used for training!"
+        assert (
+            self.is_train
+        ), "SemanticOneFormerCustomDatasetMapper should only be used for training!"
 
         dataset_dict = copy.deepcopy(dataset_dict)  # it will be modified by code below
         image = utils.read_image(dataset_dict["file_name"], format=self.img_format)
@@ -155,7 +159,9 @@ class SemanticOneFormerCustomDatasetMapper:
 
         if "sem_seg_file_name" in dataset_dict:
             # PyTorch transformation not implemented for uint16, so converting it to double first
-            sem_seg_gt = utils.read_image(dataset_dict.pop("sem_seg_file_name")).astype("double")
+            sem_seg_gt = utils.read_image(dataset_dict.pop("sem_seg_file_name")).astype(
+                "double"
+            )
         else:
             sem_seg_gt = None
 
@@ -186,7 +192,9 @@ class SemanticOneFormerCustomDatasetMapper:
             ]
             image = F.pad(image, padding_size, value=128).contiguous()
             if sem_seg_gt is not None:
-                sem_seg_gt = F.pad(sem_seg_gt, padding_size, value=self.ignore_label).contiguous()
+                sem_seg_gt = F.pad(
+                    sem_seg_gt, padding_size, value=self.ignore_label
+                ).contiguous()
 
         image_shape = (image.shape[-2], image.shape[-1])  # h, w
 
@@ -199,7 +207,9 @@ class SemanticOneFormerCustomDatasetMapper:
             dataset_dict["sem_seg"] = sem_seg_gt.long()
 
         if "annotations" in dataset_dict:
-            raise ValueError("Semantic segmentation dataset should not have 'annotations'.")
+            raise ValueError(
+                "Semantic segmentation dataset should not have 'annotations'."
+            )
 
         # Prepare per-category binary masks
         if sem_seg_gt is not None:
@@ -216,10 +226,17 @@ class SemanticOneFormerCustomDatasetMapper:
 
             if len(masks) == 0:
                 # Some image does not have annotation (all ignored)
-                instances.gt_masks = torch.zeros((0, sem_seg_gt.shape[-2], sem_seg_gt.shape[-1]))
+                instances.gt_masks = torch.zeros(
+                    (0, sem_seg_gt.shape[-2], sem_seg_gt.shape[-1])
+                )
             else:
                 masks = BitMasks(
-                    torch.stack([torch.from_numpy(np.ascontiguousarray(x.copy())) for x in masks])
+                    torch.stack(
+                        [
+                            torch.from_numpy(np.ascontiguousarray(x.copy()))
+                            for x in masks
+                        ]
+                    )
                 )
                 instances.gt_masks = masks.tensor
 
@@ -234,5 +251,5 @@ class SemanticOneFormerCustomDatasetMapper:
             dataset_dict["orig_shape"] = image_shape
             dataset_dict["task"] = task
             dataset_dict["text"] = text
-        
+
         return dataset_dict

@@ -61,7 +61,9 @@ def setup(args):
 def do_flop(cfg):
     if isinstance(cfg, CfgNode):
         mapper = DatasetMapper(cfg, False)
-        data_loader = build_detection_test_loader(cfg, cfg.DATASETS.TEST_PANOPTIC[0], mapper=mapper)
+        data_loader = build_detection_test_loader(
+            cfg, cfg.DATASETS.TEST_PANOPTIC[0], mapper=mapper
+        )
         model = build_model(cfg)
         DetectionCheckpointer(model).load(cfg.MODEL.WEIGHTS)
     else:
@@ -76,6 +78,7 @@ def do_flop(cfg):
     for idx, data in zip(tqdm.trange(args.num_inputs), data_loader):  # noqa
         if args.use_fixed_input_size and isinstance(cfg, CfgNode):
             import torch
+
             crop_size = cfg.INPUT.CROP.SIZE
             data[0]["image"] = torch.zeros((3, crop_size[0], crop_size[1]))
         flops = FlopCountAnalysis(model, data)
@@ -84,20 +87,26 @@ def do_flop(cfg):
         counts += flops.by_operator()
         total_flops.append(flops.total())
 
-    logger.info("Flops table computed from only one input sample:\n" + flop_count_table(flops))
+    logger.info(
+        "Flops table computed from only one input sample:\n" + flop_count_table(flops)
+    )
     logger.info(
         "Average GFlops for each type of operators:\n"
         + str([(k, v / (idx + 1) / 1e9) for k, v in counts.items()])
     )
     logger.info(
-        "Total GFlops: {:.1f}±{:.1f}".format(np.mean(total_flops) / 1e9, np.std(total_flops) / 1e9)
+        "Total GFlops: {:.1f}±{:.1f}".format(
+            np.mean(total_flops) / 1e9, np.std(total_flops) / 1e9
+        )
     )
 
 
 def do_activation(cfg):
     if isinstance(cfg, CfgNode):
         mapper = DatasetMapper(cfg, False)
-        data_loader = build_detection_test_loader(cfg, cfg.DATASETS.TEST_PANOPTIC[0], mapper=mapper)
+        data_loader = build_detection_test_loader(
+            cfg, cfg.DATASETS.TEST_PANOPTIC[0], mapper=mapper
+        )
         model = build_model(cfg)
         DetectionCheckpointer(model).load(cfg.MODEL.WEIGHTS)
     else:
@@ -123,6 +132,7 @@ def do_activation(cfg):
         )
     )
 
+
 def do_speed(cfg):
     if isinstance(cfg, CfgNode):
         model = build_model(cfg)
@@ -133,6 +143,7 @@ def do_speed(cfg):
         DetectionCheckpointer(model).load(cfg.train.init_checkpoint)
     model.eval()
     import torch
+
     crop_size = cfg.INPUT.CROP.SIZE
     data = [{}]
     data[0]["image"] = torch.zeros((3, crop_size[0], crop_size[1]))
@@ -146,21 +157,22 @@ def do_speed(cfg):
     fps = []
     times = []
     for _ in range(5):
-        for _ in tqdm.trange(args.num_inputs):  # noqa    
+        for _ in tqdm.trange(args.num_inputs):  # noqa
             tstart.record()
             model(data)
             tend.record()
             torch.cuda.synchronize()
             total_times.append(tstart.elapsed_time(tend))
         times.append(np.mean(total_times))
-        fps.append(1000/np.mean(total_times))
+        fps.append(1000 / np.mean(total_times))
 
     logger.info(
-        "Average Time per {}x{} Image : {:.1f} ± {:.1f} milli-seconds".format(crop_size, crop_size, np.mean(times), np.std(times))
+        "Average Time per {}x{} Image : {:.1f} ± {:.1f} milli-seconds".format(
+            crop_size, crop_size, np.mean(times), np.std(times)
+        )
     )
-    logger.info(
-        "FPS : {:.2f} ± {:.2f}".format(np.mean(fps), np.std(fps))
-    )
+    logger.info("FPS : {:.2f} ± {:.2f}".format(np.mean(fps), np.std(fps)))
+
 
 def do_parameter(cfg):
     if isinstance(cfg, CfgNode):

@@ -38,6 +38,7 @@ from oneformer import (
 from detectron2.utils.events import CommonMetricPrinter, JSONWriter
 from time import sleep
 
+
 class Trainer(TPDefaultTrainer):
     """
     Extension of the Trainer class adapted to MaskFormer.
@@ -56,7 +57,7 @@ class Trainer(TPDefaultTrainer):
         else:
             mapper = None
             return build_detection_train_loader(cfg, mapper=mapper)
-    
+
     def build_writers(self):
         """
         Build a list of writers to be used. By default it contains
@@ -125,7 +126,9 @@ class Trainer(TPDefaultTrainer):
 
                 hyperparams = copy.copy(defaults)
                 if "backbone" in module_name:
-                    hyperparams["lr"] = hyperparams["lr"] * cfg.SOLVER.BACKBONE_MULTIPLIER
+                    hyperparams["lr"] = (
+                        hyperparams["lr"] * cfg.SOLVER.BACKBONE_MULTIPLIER
+                    )
                 if (
                     "relative_position_bias_table" in module_param_name
                     or "absolute_pos_embed" in module_param_name
@@ -149,9 +152,13 @@ class Trainer(TPDefaultTrainer):
 
             class FullModelGradientClippingOptimizer(optim):
                 def step(self, closure=None):
-                    all_params = itertools.chain(*[x["params"] for x in self.param_groups])
+                    all_params = itertools.chain(
+                        *[x["params"] for x in self.param_groups]
+                    )
                     for p in all_params:
-                        torch.nan_to_num(p.grad, nan=0.0, posinf=1e5, neginf=-1e5, out=p.grad)
+                        torch.nan_to_num(
+                            p.grad, nan=0.0, posinf=1e5, neginf=-1e5, out=p.grad
+                        )
                     torch.nn.utils.clip_grad_norm_(all_params, clip_norm_val)
                     super().step(closure=closure)
 
@@ -190,7 +197,9 @@ def setup(args):
     cfg.freeze()
     default_setup(cfg, args)
     # Setup logger for "oneformer" module
-    setup_logger(output=cfg.OUTPUT_DIR, distributed_rank=comm.get_rank(), name="oneformer")
+    setup_logger(
+        output=cfg.OUTPUT_DIR, distributed_rank=comm.get_rank(), name="oneformer"
+    )
     return cfg
 
 
@@ -199,8 +208,10 @@ def main(args):
     trainer = Trainer(cfg)
     trainer.resume_or_load(resume=args.resume)
     if args.machine_rank == 0:
-        net_params = sum(p.numel() for p in trainer.model.parameters() if p.requires_grad)
-        print("Total Params: {} M".format(net_params/1e6))
+        net_params = sum(
+            p.numel() for p in trainer.model.parameters() if p.requires_grad
+        )
+        print("Total Params: {} M".format(net_params / 1e6))
     sleep(3)
     return trainer.train()
 

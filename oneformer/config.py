@@ -2,8 +2,14 @@
 # Copyright (c) Facebook, Inc. and its affiliates.
 from detectron2.config import CfgNode as CN
 
-__all__ = ["add_common_config", "add_oneformer_config", "add_swin_config", 
-            "add_dinat_config", "add_convnext_config"]
+__all__ = [
+    "add_common_config",
+    "add_oneformer_config",
+    "add_swin_config",
+    "add_dinat_config",
+    "add_convnext_config",
+]
+
 
 def add_common_config(cfg):
     """
@@ -93,9 +99,14 @@ def add_common_config(cfg):
     cfg.INPUT.MAX_SCALE = 2.0
 
     # MSDeformAttn encoder configs
-    cfg.MODEL.SEM_SEG_HEAD.DEFORMABLE_TRANSFORMER_ENCODER_IN_FEATURES = ["res3", "res4", "res5"]
+    cfg.MODEL.SEM_SEG_HEAD.DEFORMABLE_TRANSFORMER_ENCODER_IN_FEATURES = [
+        "res3",
+        "res4",
+        "res5",
+    ]
     cfg.MODEL.SEM_SEG_HEAD.DEFORMABLE_TRANSFORMER_ENCODER_N_POINTS = 4
     cfg.MODEL.SEM_SEG_HEAD.DEFORMABLE_TRANSFORMER_ENCODER_N_HEADS = 8
+
 
 def add_oneformer_config(cfg):
     """
@@ -136,7 +147,9 @@ def add_oneformer_config(cfg):
     cfg.MODEL.ONE_FORMER.SIZE_DIVISIBILITY = 32
 
     # transformer module
-    cfg.MODEL.ONE_FORMER.TRANSFORMER_DECODER_NAME = "ContrastiveMultiScaleMaskedTransformerDecoder"
+    cfg.MODEL.ONE_FORMER.TRANSFORMER_DECODER_NAME = (
+        "ContrastiveMultiScaleMaskedTransformerDecoder"
+    )
 
     # point loss configs
     # Number of points sampled during training for a mask point head.
@@ -148,11 +161,12 @@ def add_oneformer_config(cfg):
     # the original paper.
     cfg.MODEL.ONE_FORMER.IMPORTANCE_SAMPLE_RATIO = 0.75
 
+
 def add_swin_config(cfg):
     """
     Add config forSWIN Backbone.
     """
-    
+
     # swin transformer backbone
     cfg.MODEL.SWIN = CN()
     cfg.MODEL.SWIN.PRETRAIN_IMG_SIZE = 224
@@ -172,6 +186,7 @@ def add_swin_config(cfg):
     cfg.MODEL.SWIN.OUT_FEATURES = ["res2", "res3", "res4", "res5"]
     cfg.MODEL.SWIN.USE_CHECKPOINT = False
 
+
 def add_dinat_config(cfg):
     """
     Add config for NAT Backbone.
@@ -186,19 +201,25 @@ def add_dinat_config(cfg):
     cfg.MODEL.DiNAT.NUM_HEADS = [2, 4, 8, 16]
     cfg.MODEL.DiNAT.DROP_PATH_RATE = 0.2
     cfg.MODEL.DiNAT.KERNEL_SIZE = 7
-    cfg.MODEL.DiNAT.DILATIONS = [[1, 16, 1], [1, 4, 1, 8], [1, 2, 1, 3, 1, 4], [1, 2, 1, 2, 1]]
+    cfg.MODEL.DiNAT.DILATIONS = [
+        [1, 16, 1],
+        [1, 4, 1, 8],
+        [1, 2, 1, 3, 1, 4],
+        [1, 2, 1, 2, 1],
+    ]
     cfg.MODEL.DiNAT.OUT_INDICES = (0, 1, 2, 3)
     cfg.MODEL.DiNAT.QKV_BIAS = True
     cfg.MODEL.DiNAT.QK_SCALE = None
     cfg.MODEL.DiNAT.DROP_RATE = 0
-    cfg.MODEL.DiNAT.ATTN_DROP_RATE = 0.
+    cfg.MODEL.DiNAT.ATTN_DROP_RATE = 0.0
     cfg.MODEL.DiNAT.IN_PATCH_SIZE = 4
+
 
 def add_convnext_config(cfg):
     """
     Add config for ConvNeXt Backbone.
     """
-    
+
     # swin transformer backbone
     cfg.MODEL.CONVNEXT = CN()
     cfg.MODEL.CONVNEXT.IN_CHANNELS = 3

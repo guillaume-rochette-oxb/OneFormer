@@ -14,7 +14,8 @@ sys.path.insert(1, os.path.join(sys.path[0], '..'))
 # fmt: on
 
 import time
-import cv2
+
+# import cv2
 import numpy as np
 import tqdm
 
@@ -30,10 +31,11 @@ from oneformer import (
     add_dinat_config,
     add_convnext_config,
 )
-from predictor import VisualizationDemo
+from demo.predictor import VisualizationDemo
 
 # constants
 WINDOW_NAME = "OneFormer Demo"
+
 
 def setup_cfg(args):
     # load config from file and command-line arguments
@@ -46,7 +48,7 @@ def setup_cfg(args):
     add_oneformer_config(cfg)
     cfg.merge_from_file(args.config_file)
     cfg.merge_from_list(args.opts)
-    cfg.freeze()
+    # cfg.freeze()
     return cfg
 
 
@@ -85,6 +87,7 @@ def get_parser():
     )
     return parser
 
+
 if __name__ == "__main__":
     seed = 0
     random.seed(seed)
@@ -107,7 +110,7 @@ if __name__ == "__main__":
     if args.input:
         for path in tqdm.tqdm(args.input, disable=not args.output):
             # use PIL, to be consistent with evaluation
-                
+
             img = read_image(path, format="BGR")
             start_time = time.time()
             predictions, visualized_output = demo.run_on_image(img, args.task)
@@ -125,13 +128,13 @@ if __name__ == "__main__":
                     for k in visualized_output.keys():
                         os.makedirs(k, exist_ok=True)
                         out_filename = os.path.join(k, args.output)
-                        visualized_output[k].save(out_filename)    
+                        visualized_output[k].save(out_filename)
                 else:
                     for k in visualized_output.keys():
-                        opath = os.path.join(args.output, k)    
+                        opath = os.path.join(args.output, k)
                         os.makedirs(opath, exist_ok=True)
                         out_filename = os.path.join(opath, os.path.basename(path))
-                        visualized_output[k].save(out_filename)    
+                        visualized_output[k].save(out_filename)
             else:
                 raise ValueError("Please specify an output path!")
     else:

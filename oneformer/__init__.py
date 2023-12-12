@@ -5,7 +5,9 @@ from . import modeling
 from .config import *
 
 # dataset loading
-from .data.dataset_mappers.coco_unified_new_baseline_dataset_mapper import COCOUnifiedNewBaselineDatasetMapper
+from .data.dataset_mappers.coco_unified_new_baseline_dataset_mapper import (
+    COCOUnifiedNewBaselineDatasetMapper,
+)
 from .data.dataset_mappers.oneformer_unified_dataset_mapper import (
     OneFormerUnifiedDatasetMapper,
 )

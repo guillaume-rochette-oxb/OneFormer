@@ -58,12 +58,17 @@ def build_transform_gen(cfg, is_train):
             )
         )
 
-    augmentation.extend([
-        T.ResizeScale(
-            min_scale=min_scale, max_scale=max_scale, target_height=image_size, target_width=image_size
-        ),
-        T.FixedSizeCrop(crop_size=(image_size, image_size)),
-    ])
+    augmentation.extend(
+        [
+            T.ResizeScale(
+                min_scale=min_scale,
+                max_scale=max_scale,
+                target_height=image_size,
+                target_width=image_size,
+            ),
+            T.FixedSizeCrop(crop_size=(image_size, image_size)),
+        ]
+    )
 
     return augmentation
 
@@ -116,7 +121,7 @@ class InstanceCOCOCustomNewBaselineDatasetMapper:
         self.num_queries = num_queries
 
         self.things = []
-        for k,v in self.meta.thing_dataset_id_to_contiguous_id.items():
+        for k, v in self.meta.thing_dataset_id_to_contiguous_id.items():
             self.things.append(v)
         self.class_names = self.meta.thing_classes
         self.text_tokenizer = Tokenize(SimpleTokenizer(), max_seq_len=max_seq_len)
@@ -134,21 +139,21 @@ class InstanceCOCOCustomNewBaselineDatasetMapper:
             "meta": meta,
             "tfm_gens": tfm_gens,
             "image_format": cfg.INPUT.FORMAT,
-            "num_queries": cfg.MODEL.ONE_FORMER.NUM_OBJECT_QUERIES - cfg.MODEL.TEXT_ENCODER.N_CTX,
+            "num_queries": cfg.MODEL.ONE_FORMER.NUM_OBJECT_QUERIES
+            - cfg.MODEL.TEXT_ENCODER.N_CTX,
             "task_seq_len": cfg.INPUT.TASK_SEQ_LEN,
             "max_seq_len": cfg.INPUT.MAX_SEQ_LEN,
         }
         return ret
-    
+
     def _get_texts(self, classes, num_class_obj):
-        
         classes = list(np.array(classes))
         texts = ["an instance photo"] * self.num_queries
-        
+
         for class_id in classes:
             cls_name = self.class_names[class_id]
             num_class_obj[cls_name] += 1
-        
+
         num = 0
         for i, cls_name in enumerate(self.class_names):
             if num_class_obj[cls_name] > 0:
@@ -179,15 +184,19 @@ class InstanceCOCOCustomNewBaselineDatasetMapper:
         image, transforms = T.apply_transform_gens(self.tfm_gens, image)
         # the crop transformation has default padding value 0 for segmentation
         padding_mask = transforms.apply_segmentation(padding_mask)
-        padding_mask = ~ padding_mask.astype(bool)
+        padding_mask = ~padding_mask.astype(bool)
 
         image_shape = image.shape[:2]  # h, w
 
         # Pytorch's dataloader is efficient on torch.Tensor due to shared-memory,
         # but not efficient on large generic data structures due to the use of pickle & mp.Queue.
         # Therefore it's important to use torch.Tensor.
-        dataset_dict["image"] = torch.as_tensor(np.ascontiguousarray(image.transpose(2, 0, 1)))
-        dataset_dict["padding_mask"] = torch.as_tensor(np.ascontiguousarray(padding_mask))
+        dataset_dict["image"] = torch.as_tensor(
+            np.ascontiguousarray(image.transpose(2, 0, 1))
+        )
+        dataset_dict["padding_mask"] = torch.as_tensor(
+            np.ascontiguousarray(padding_mask)
+        )
 
         if not self.is_train:
             # USER: Modify this if you want to keep them for some reason.
@@ -207,14 +216,14 @@ class InstanceCOCOCustomNewBaselineDatasetMapper:
             ]
 
             instances = utils.annotations_to_instances(annos, image_shape)
-        
+
             instances.gt_boxes = instances.gt_masks.get_bounding_boxes()
             # Need to filter empty instances first (due to augmentation)
             instances = utils.filter_empty_instances(instances)
             # Generate masks from polygon
             h, w = instances.image_size
             # image_size_xyxy = torch.as_tensor([w, h, w, h], dtype=torch.float)
-            if hasattr(instances, 'gt_masks'):
+            if hasattr(instances, "gt_masks"):
                 gt_masks = instances.gt_masks
                 gt_masks = convert_coco_poly_to_mask(gt_masks.polygons, h, w)
                 instances.gt_masks = gt_masks

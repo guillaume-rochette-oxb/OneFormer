@@ -74,7 +74,7 @@ class TPTrainerBase:
         Args:
             start_iter, max_iter (int): See docs above
         """
-        
+
         self._logger.info("Starting training from iteration {}".format(start_iter))
 
         self.iter = self.start_iter = start_iter
@@ -84,8 +84,8 @@ class TPTrainerBase:
             try:
                 self.before_train()
                 for self.iter in range(start_iter, max_iter):
-                    if self.iter==4:
-                        self.ave_start=time.perf_counter()
+                    if self.iter == 4:
+                        self.ave_start = time.perf_counter()
                     self.before_step()
                     self.run_step()
                     self.after_step()
@@ -94,15 +94,15 @@ class TPTrainerBase:
                 self._logger.exception("Exception during training:")
                 raise
         self.ave_end = time.perf_counter()
-        
-        total_time = np.round((self.ave_end-self.ave_start), 2)
-        images = (self.iter-5) * self.cfg.SOLVER.IMS_PER_BATCH
+
+        total_time = np.round((self.ave_end - self.ave_start), 2)
+        images = (self.iter - 5) * self.cfg.SOLVER.IMS_PER_BATCH
         throughput = np.round(images / total_time, 2)
-        
+
         if dist.get_rank() == 0:
-            print('\n-------------------')
+            print("\n-------------------")
             print(f"Throughput: {throughput} img/sec")
-            print('-------------------')
+            print("-------------------")
 
     def before_train(self):
         for h in self._hooks:
@@ -156,7 +156,9 @@ class TPTrainerBase:
                     h.load_state_dict(value)
                     break
             else:
-                logger.warning(f"Cannot find the hook '{key}', its state_dict is ignored.")
+                logger.warning(
+                    f"Cannot find the hook '{key}', its state_dict is ignored."
+                )
 
 
 class TPSimpleTrainer(TPTrainerBase):
@@ -219,7 +221,7 @@ class TPSimpleTrainer(TPTrainerBase):
         """
         If you want to do something with the losses, you can wrap the model.
         """
-        
+
         loss_dict = self.model(data)
         if isinstance(loss_dict, torch.Tensor):
             losses = loss_dict
@@ -233,14 +235,13 @@ class TPSimpleTrainer(TPTrainerBase):
         """
         self.optimizer.zero_grad()
         losses.backward()
-        
 
         """
         If you need gradient clipping/scaling or other processing, you can
         wrap the optimizer with your custom `step()` method. But it is
         suboptimal as explained in https://arxiv.org/abs/2006.15704 Sec 3.2.4
         """
-        
+
         self._write_metrics(loss_dict, data_time)
         self.optimizer.step()
 
@@ -299,7 +300,8 @@ class TPSimpleTrainer(TPTrainerBase):
 
             # average the rest metrics
             metrics_dict = {
-                k: np.mean([x[k] for x in all_metrics_dict]) for k in all_metrics_dict[0].keys()
+                k: np.mean([x[k] for x in all_metrics_dict])
+                for k in all_metrics_dict[0].keys()
             }
             total_losses_reduced = sum(metrics_dict.values())
             if not np.isfinite(total_losses_reduced):
@@ -334,7 +336,9 @@ class TPAMPTrainer(TPSimpleTrainer):
             model, data_loader, optimizer: same as in :class:`SimpleTrainer`.
             grad_scaler: torch GradScaler to automatically scale gradients.
         """
-        unsupported = "AMPTrainer does not support single-process multi-device training!"
+        unsupported = (
+            "AMPTrainer does not support single-process multi-device training!"
+        )
         if isinstance(model, DistributedDataParallel):
             assert not (model.device_ids and len(model.device_ids) > 1), unsupported
         assert not isinstance(model, DataParallel), unsupported
@@ -354,7 +358,9 @@ class TPAMPTrainer(TPSimpleTrainer):
         Implement the AMP training logic.
         """
         assert self.model.training, "[AMPTrainer] model was changed to eval mode!"
-        assert torch.cuda.is_available(), "[AMPTrainer] CUDA is required for AMP training!"
+        assert (
+            torch.cuda.is_available()
+        ), "[AMPTrainer] CUDA is required for AMP training!"
         from torch.cuda.amp import autocast
 
         start = time.perf_counter()
@@ -369,7 +375,6 @@ class TPAMPTrainer(TPSimpleTrainer):
             else:
                 losses = sum(loss_dict.values())
 
-        
         self.optimizer.zero_grad()
         self.grad_scaler.scale(losses).backward()
 

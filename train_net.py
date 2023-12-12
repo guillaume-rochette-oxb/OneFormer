@@ -68,6 +68,7 @@ from time import sleep
 from oneformer.data.build import *
 from oneformer.data.dataset_mappers.dataset_mapper import DatasetMapper
 
+
 class Trainer(DefaultTrainer):
     """
     Extension of the Trainer class adapted to OneFormer.
@@ -99,7 +100,9 @@ class Trainer(DefaultTrainer):
         if evaluator_type == "coco":
             evaluator_list.append(COCOEvaluator(dataset_name, output_dir=output_folder))
             if cfg.MODEL.TEST.DETECTION_ON:
-                evaluator_list.append(DetectionCOCOEvaluator(dataset_name, output_dir=output_folder))
+                evaluator_list.append(
+                    DetectionCOCOEvaluator(dataset_name, output_dir=output_folder)
+                )
         # panoptic segmentation
         if evaluator_type in [
             "coco_panoptic_seg",
@@ -108,16 +111,31 @@ class Trainer(DefaultTrainer):
             "mapillary_vistas_panoptic_seg",
         ]:
             if cfg.MODEL.TEST.PANOPTIC_ON:
-                evaluator_list.append(COCOPanopticEvaluator(dataset_name, output_folder))
+                evaluator_list.append(
+                    COCOPanopticEvaluator(dataset_name, output_folder)
+                )
         # COCO
         if evaluator_type == "coco_panoptic_seg" and cfg.MODEL.TEST.INSTANCE_ON:
             evaluator_list.append(COCOEvaluator(dataset_name, output_dir=output_folder))
         if evaluator_type == "coco_panoptic_seg" and cfg.MODEL.TEST.SEMANTIC_ON:
-            evaluator_list.append(SemSegEvaluator(dataset_name, distributed=True, output_dir=output_folder))
+            evaluator_list.append(
+                SemSegEvaluator(
+                    dataset_name, distributed=True, output_dir=output_folder
+                )
+            )
         if evaluator_type == "coco_panoptic_seg" and cfg.MODEL.TEST.DETECTION_ON:
-            evaluator_list.append(DetectionCOCOEvaluator(dataset_name, output_dir=output_folder))
-        if evaluator_type == "mapillary_vistas_panoptic_seg" and cfg.MODEL.TEST.SEMANTIC_ON:
-            evaluator_list.append(SemSegEvaluator(dataset_name, distributed=True, output_dir=output_folder))
+            evaluator_list.append(
+                DetectionCOCOEvaluator(dataset_name, output_dir=output_folder)
+            )
+        if (
+            evaluator_type == "mapillary_vistas_panoptic_seg"
+            and cfg.MODEL.TEST.SEMANTIC_ON
+        ):
+            evaluator_list.append(
+                SemSegEvaluator(
+                    dataset_name, distributed=True, output_dir=output_folder
+                )
+            )
         # Cityscapes
         if evaluator_type == "cityscapes_instance":
             assert (
@@ -142,7 +160,9 @@ class Trainer(DefaultTrainer):
                 evaluator_list.append(CityscapesInstanceEvaluator(dataset_name))
         # ADE20K
         if evaluator_type == "ade20k_panoptic_seg" and cfg.MODEL.TEST.INSTANCE_ON:
-            evaluator_list.append(InstanceSegEvaluator(dataset_name, output_dir=output_folder))
+            evaluator_list.append(
+                InstanceSegEvaluator(dataset_name, output_dir=output_folder)
+            )
         if len(evaluator_list) == 0:
             raise NotImplementedError(
                 "no Evaluator for the dataset {} with the type {}".format(
@@ -167,7 +187,7 @@ class Trainer(DefaultTrainer):
         else:
             mapper = None
             return build_detection_train_loader(cfg, mapper=mapper)
-    
+
     def build_writers(self):
         """
         Build a list of writers to be used. By default it contains
@@ -237,7 +257,9 @@ class Trainer(DefaultTrainer):
 
                 hyperparams = copy.copy(defaults)
                 if "backbone" in module_name:
-                    hyperparams["lr"] = hyperparams["lr"] * cfg.SOLVER.BACKBONE_MULTIPLIER
+                    hyperparams["lr"] = (
+                        hyperparams["lr"] * cfg.SOLVER.BACKBONE_MULTIPLIER
+                    )
                 if (
                     "relative_position_bias_table" in module_param_name
                     or "absolute_pos_embed" in module_param_name
@@ -261,9 +283,13 @@ class Trainer(DefaultTrainer):
 
             class FullModelGradientClippingOptimizer(optim):
                 def step(self, closure=None):
-                    all_params = itertools.chain(*[x["params"] for x in self.param_groups])
+                    all_params = itertools.chain(
+                        *[x["params"] for x in self.param_groups]
+                    )
                     for p in all_params:
-                        torch.nan_to_num(p.grad, nan=0.0, posinf=1e5, neginf=-1e5, out=p.grad)
+                        torch.nan_to_num(
+                            p.grad, nan=0.0, posinf=1e5, neginf=-1e5, out=p.grad
+                        )
                     torch.nn.utils.clip_grad_norm_(all_params, clip_norm_val)
                     super().step(closure=closure)
 
@@ -299,7 +325,7 @@ class Trainer(DefaultTrainer):
         res = cls.test(cfg, model, evaluators)
         res = OrderedDict({k + "_TTA": v for k, v in res.items()})
         return res
-    
+
     @classmethod
     def build_test_loader(cls, cfg, dataset_name):
         """
@@ -310,7 +336,7 @@ class Trainer(DefaultTrainer):
         """
         mapper = DatasetMapper(cfg, False)
         return build_detection_test_loader(cfg, dataset_name, mapper=mapper)
-    
+
     @classmethod
     def test(cls, cfg, model, evaluators=None):
         """
@@ -328,7 +354,7 @@ class Trainer(DefaultTrainer):
         logger = logging.getLogger(__name__)
         if isinstance(evaluators, DatasetEvaluator):
             evaluators = [evaluators]
-        
+
         if cfg.MODEL.TEST.TASK == "panoptic":
             test_dataset = cfg.DATASETS.TEST_PANOPTIC
         elif cfg.MODEL.TEST.TASK == "instance":
@@ -336,14 +362,16 @@ class Trainer(DefaultTrainer):
         elif cfg.MODEL.TEST.TASK == "semantic":
             test_dataset = cfg.DATASETS.TEST_SEMANTIC
         else:
-            warnings.warn(f"WARNING: No task provided! Setting task to default value: 'panoptic'")
+            warnings.warn(
+                f"WARNING: No task provided! Setting task to default value: 'panoptic'"
+            )
             test_dataset = cfg.DATASETS.TEST_PANOPTIC
 
         if evaluators is not None:
             assert len(test_dataset) == len(evaluators), "{} != {}".format(
                 len(test_dataset), len(evaluators)
             )
-    
+
         results = OrderedDict
 
         results = OrderedDict()
@@ -372,7 +400,9 @@ class Trainer(DefaultTrainer):
                 ), "Evaluator must return a dict on the main process. Got {} instead.".format(
                     results_i
                 )
-                logger.info("Evaluation results for {} in csv format:".format(dataset_name))
+                logger.info(
+                    "Evaluation results for {} in csv format:".format(dataset_name)
+                )
                 print_csv_format(results_i)
 
         if len(results) == 1:
@@ -399,7 +429,9 @@ def setup(args):
     if not args.eval_only:
         setup_wandb(cfg, args)
     # Setup logger for "oneformer" module
-    setup_logger(output=cfg.OUTPUT_DIR, distributed_rank=comm.get_rank(), name="oneformer")
+    setup_logger(
+        output=cfg.OUTPUT_DIR, distributed_rank=comm.get_rank(), name="oneformer"
+    )
     return cfg
 
 
@@ -409,7 +441,7 @@ def main(args):
     if args.eval_only:
         model = Trainer.build_model(cfg)
         net_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
-        print("Total Params: {} M".format(net_params/1e6))
+        print("Total Params: {} M".format(net_params / 1e6))
         DetectionCheckpointer(model, save_dir=cfg.OUTPUT_DIR).resume_or_load(
             cfg.MODEL.WEIGHTS, resume=args.resume
         )
@@ -423,8 +455,10 @@ def main(args):
     trainer = Trainer(cfg)
     trainer.resume_or_load(resume=args.resume)
     if args.machine_rank == 0:
-        net_params = sum(p.numel() for p in trainer.model.parameters() if p.requires_grad)
-        print("Total Params: {} M".format(net_params/1e6))
+        net_params = sum(
+            p.numel() for p in trainer.model.parameters() if p.requires_grad
+        )
+        print("Total Params: {} M".format(net_params / 1e6))
     sleep(3)
     return trainer.train()
 

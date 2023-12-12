@@ -59,7 +59,7 @@ class DatasetMapperTTA:
         numpy_image = dataset_dict["image"].permute(1, 2, 0).numpy()
         shape = numpy_image.shape
         orig_shape = (dataset_dict["height"], dataset_dict["width"])
-        
+
         if shape[:2] != orig_shape:
             # It transforms the "original" image in the dataset to the input image
             pre_tfm = ResizeTransform(orig_shape[0], orig_shape[1], shape[0], shape[1])
@@ -79,7 +79,9 @@ class DatasetMapperTTA:
         ret = []
         for aug in aug_candidates:
             new_image, tfms = apply_augmentations(aug, np.copy(numpy_image))
-            torch_image = torch.from_numpy(np.ascontiguousarray(new_image.transpose(2, 0, 1)))
+            torch_image = torch.from_numpy(
+                np.ascontiguousarray(new_image.transpose(2, 0, 1))
+            )
 
             dic = copy.deepcopy(dataset_dict)
             dic["transforms"] = pre_tfm + tfms

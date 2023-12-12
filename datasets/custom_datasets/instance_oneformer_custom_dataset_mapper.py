@@ -69,15 +69,17 @@ class InstanceOneFormerCustomDatasetMapper:
 
         logger = logging.getLogger(__name__)
         mode = "training" if is_train else "inference"
-        logger.info(f"[{self.__class__.__name__}] Augmentations used in {mode}: {augmentations}")
-    
+        logger.info(
+            f"[{self.__class__.__name__}] Augmentations used in {mode}: {augmentations}"
+        )
+
         self.things = []
-        for k,v in self.meta.thing_dataset_id_to_contiguous_id.items():
+        for k, v in self.meta.thing_dataset_id_to_contiguous_id.items():
             self.things.append(v)
         self.class_names = self.meta.thing_classes
         self.text_tokenizer = Tokenize(SimpleTokenizer(), max_seq_len=max_seq_len)
         self.task_tokenizer = Tokenize(SimpleTokenizer(), max_seq_len=task_seq_len)
-    
+
     @classmethod
     def from_config(cls, cfg, is_train=True):
         # Build augmentation
@@ -107,7 +109,8 @@ class InstanceOneFormerCustomDatasetMapper:
             "is_train": is_train,
             "meta": meta,
             "name": dataset_names[0],
-            "num_queries": cfg.MODEL.ONE_FORMER.NUM_OBJECT_QUERIES - cfg.MODEL.TEXT_ENCODER.N_CTX,
+            "num_queries": cfg.MODEL.ONE_FORMER.NUM_OBJECT_QUERIES
+            - cfg.MODEL.TEXT_ENCODER.N_CTX,
             "task_seq_len": cfg.INPUT.TASK_SEQ_LEN,
             "max_seq_len": cfg.INPUT.MAX_SEQ_LEN,
             "augmentations": augs,
@@ -119,14 +122,13 @@ class InstanceOneFormerCustomDatasetMapper:
         return ret
 
     def _get_texts(self, classes, num_class_obj):
-        
         classes = list(np.array(classes))
         texts = ["an instance photo"] * self.num_queries
-        
+
         for class_id in classes:
             cls_name = self.class_names[class_id]
             num_class_obj[cls_name] += 1
-        
+
         num = 0
         for i, cls_name in enumerate(self.class_names):
             if num_class_obj[cls_name] > 0:
@@ -137,7 +139,7 @@ class InstanceOneFormerCustomDatasetMapper:
                     num += 1
 
         return texts
-    
+
     def __call__(self, dataset_dict):
         """
         Args:
@@ -179,9 +181,9 @@ class InstanceOneFormerCustomDatasetMapper:
                 # COCO RLE
                 masks.append(mask_util.decode(segm))
             elif isinstance(segm, np.ndarray):
-                assert segm.ndim == 2, "Expect segmentation of 2 dimensions, got {}.".format(
-                    segm.ndim
-                )
+                assert (
+                    segm.ndim == 2
+                ), "Expect segmentation of 2 dimensions, got {}.".format(segm.ndim)
                 # mask array
                 masks.append(segm)
             else:
@@ -241,5 +243,5 @@ class InstanceOneFormerCustomDatasetMapper:
         dataset_dict["task"] = task
         dataset_dict["text"] = text
         dataset_dict["thing_ids"] = self.things
-        
+
         return dataset_dict

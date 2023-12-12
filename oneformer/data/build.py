@@ -14,10 +14,8 @@ from detectron2.data.dataset_mapper import DatasetMapper
 from detectron2.data.samplers import (
     InferenceSampler,
 )
-from detectron2.data.build import (
-    get_detection_dataset_dicts,
-    trivial_batch_collator
-)
+from detectron2.data.build import get_detection_dataset_dicts, trivial_batch_collator
+
 """
 This file contains the default logic to build a dataloader for training or testing.
 """
@@ -39,7 +37,8 @@ def _test_loader_from_config(cfg, dataset_name, mapper=None):
         dataset_name,
         filter_empty=False,
         proposal_files=[
-            cfg.DATASETS.PROPOSAL_FILES_TEST[list(cfg.DATASETS.TEST).index(x)] for x in dataset_name
+            cfg.DATASETS.PROPOSAL_FILES_TEST[list(cfg.DATASETS.TEST).index(x)]
+            for x in dataset_name
         ]
         if cfg.MODEL.LOAD_PROPOSALS
         else None,

@@ -1,1 +1,2 @@
 global-include *.json *.txt *.txt.gz *.yaml
+global-include *.sh *.cpp *.h *.cu *.cuh

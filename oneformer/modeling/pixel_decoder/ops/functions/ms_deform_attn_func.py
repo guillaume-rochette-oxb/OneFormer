@@ -22,12 +22,34 @@ if torch.cuda.is_available():
     try:
         import MultiScaleDeformableAttention as MSDA
     except ModuleNotFoundError as e:
-        info_string = (
-            "\n\nPlease compile MultiScaleDeformableAttention CUDA op with the following commands:\n"
-            "\t`cd mask2former/modeling/pixel_decoder/ops`\n"
-            "\t`sh make.sh`\n"
-        )
-        raise ModuleNotFoundError(info_string)
+        from pathlib import Path
+
+        import subprocess
+        import shlex
+
+        path = Path(__file__).parents[1] / "setup.py"
+        path = str(path.resolve(strict=True))
+
+        args = f"python {path} build install"
+
+        try:
+            print(args)
+            process = subprocess.run(
+                args=shlex.split(args),
+                check=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                text=True,
+            )
+        except subprocess.CalledProcessError as error:
+            print(error.stdout)
+
+        # info_string = (
+        #     "\n\nPlease compile MultiScaleDeformableAttention CUDA op with the following commands:\n"
+        #     "\t`cd mask2former/modeling/pixel_decoder/ops`\n"
+        #     "\t`sh make.sh`\n"
+        # )
+        # raise ModuleNotFoundError(info_string)
 else:
     MultiScaleDeformableAttention = None
 

@@ -25,15 +25,19 @@ if torch.cuda.is_available():
         from pathlib import Path
 
         import subprocess
+        import shutil
         import shlex
 
-        path = Path(__file__).parents[1] / "setup.py"
-        path = str(path.resolve(strict=True))
+        EXECUTABLE_PATH = Path(shutil.which("python"))
+        EXECUTABLE_PATH = EXECUTABLE_PATH.resolve(strict=True)
 
-        args = f"python {path} build install"
+        SETUP_PATH = Path(__file__).parents[1] / "setup.py"
+        SETUP_PATH = SETUP_PATH.resolve(strict=True)
+
+        args = f"{EXECUTABLE_PATH} {SETUP_PATH} build install"
+        print(args)
 
         try:
-            print(args)
             process = subprocess.run(
                 args=shlex.split(args),
                 check=True,

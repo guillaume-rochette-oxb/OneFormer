@@ -18,96 +18,90 @@ import torch.nn.functional as F
 from torch.autograd import Function
 from torch.autograd.function import once_differentiable
 
-if torch.cuda.is_available():
-    try:
-        import MultiScaleDeformableAttention as MSDA
-    except ModuleNotFoundError as e:
-        from pathlib import Path
-
-        import subprocess
-        import shutil
-        import shlex
-
-        EXECUTABLE_PATH = Path(shutil.which("python"))
-        EXECUTABLE_PATH = EXECUTABLE_PATH.resolve(strict=True)
-
-        SETUP_PATH = Path(__file__).parents[1] / "setup.py"
-        SETUP_PATH = SETUP_PATH.resolve(strict=True)
-
-        args = f"{EXECUTABLE_PATH} {SETUP_PATH} build install"
-        print(args)
-
-        try:
-            process = subprocess.run(
-                args=shlex.split(args),
-                check=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
-                text=True,
-            )
-        except subprocess.CalledProcessError as error:
-            print(error.stdout)
-
-        # info_string = (
-        #     "\n\nPlease compile MultiScaleDeformableAttention CUDA op with the following commands:\n"
-        #     "\t`cd mask2former/modeling/pixel_decoder/ops`\n"
-        #     "\t`sh make.sh`\n"
-        # )
-        # raise ModuleNotFoundError(info_string)
-else:
-    MultiScaleDeformableAttention = None
-
-
-class MSDeformAttnFunction(Function):
-    @staticmethod
-    def forward(
-        ctx,
-        value,
-        value_spatial_shapes,
-        value_level_start_index,
-        sampling_locations,
-        attention_weights,
-        im2col_step,
-    ):
-        ctx.im2col_step = im2col_step
-        output = MSDA.ms_deform_attn_forward(
-            value,
-            value_spatial_shapes,
-            value_level_start_index,
-            sampling_locations,
-            attention_weights,
-            ctx.im2col_step,
-        )
-        ctx.save_for_backward(
-            value,
-            value_spatial_shapes,
-            value_level_start_index,
-            sampling_locations,
-            attention_weights,
-        )
-        return output
-
-    @staticmethod
-    @once_differentiable
-    def backward(ctx, grad_output):
-        (
-            value,
-            value_spatial_shapes,
-            value_level_start_index,
-            sampling_locations,
-            attention_weights,
-        ) = ctx.saved_tensors
-        grad_value, grad_sampling_loc, grad_attn_weight = MSDA.ms_deform_attn_backward(
-            value,
-            value_spatial_shapes,
-            value_level_start_index,
-            sampling_locations,
-            attention_weights,
-            grad_output,
-            ctx.im2col_step,
-        )
-
-        return grad_value, None, None, grad_sampling_loc, grad_attn_weight, None
+# if torch.cuda.is_available():
+#     try:
+#         import MultiScaleDeformableAttention as MSDA
+#     except ModuleNotFoundError as e:
+#         from pathlib import Path
+#
+#         import subprocess
+#         import shutil
+#         import shlex
+#
+#         EXECUTABLE_PATH = Path(shutil.which("python"))
+#         EXECUTABLE_PATH = EXECUTABLE_PATH.resolve(strict=True)
+#
+#         SETUP_PATH = Path(__file__).parents[1] / "setup.py"
+#         SETUP_PATH = SETUP_PATH.resolve(strict=True)
+#
+#         args = f"{EXECUTABLE_PATH} {SETUP_PATH} build install"
+#         print(args)
+#
+#         try:
+#             process = subprocess.run(
+#                 args=shlex.split(args),
+#                 check=True,
+#                 stdout=subprocess.PIPE,
+#                 stderr=subprocess.STDOUT,
+#                 text=True,
+#             )
+#         except subprocess.CalledProcessError as error:
+#             print(error.stdout)
+#
+# else:
+#     MultiScaleDeformableAttention = None
+#
+#
+# class MSDeformAttnFunction(Function):
+#     @staticmethod
+#     def forward(
+#         ctx,
+#         value,
+#         value_spatial_shapes,
+#         value_level_start_index,
+#         sampling_locations,
+#         attention_weights,
+#         im2col_step,
+#     ):
+#         ctx.im2col_step = im2col_step
+#         output = MSDA.ms_deform_attn_forward(
+#             value,
+#             value_spatial_shapes,
+#             value_level_start_index,
+#             sampling_locations,
+#             attention_weights,
+#             ctx.im2col_step,
+#         )
+#         ctx.save_for_backward(
+#             value,
+#             value_spatial_shapes,
+#             value_level_start_index,
+#             sampling_locations,
+#             attention_weights,
+#         )
+#         return output
+#
+#     @staticmethod
+#     @once_differentiable
+#     def backward(ctx, grad_output):
+#         (
+#             value,
+#             value_spatial_shapes,
+#             value_level_start_index,
+#             sampling_locations,
+#             attention_weights,
+#         ) = ctx.saved_tensors
+#         grad_value, grad_sampling_loc, grad_attn_weight = MSDA.ms_deform_attn_backward(
+#             value,
+#             value_spatial_shapes,
+#             value_level_start_index,
+#             sampling_locations,
+#             attention_weights,
+#             grad_output,
+#             ctx.im2col_step,
+#         )
+#
+#         return grad_value, None, None, grad_sampling_loc, grad_attn_weight, None
 
 
 def ms_deform_attn_core_pytorch(

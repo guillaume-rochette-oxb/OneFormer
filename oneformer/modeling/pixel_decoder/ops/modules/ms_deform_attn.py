@@ -21,10 +21,6 @@ from torch import nn
 import torch.nn.functional as F
 from torch.nn.init import xavier_uniform_, constant_
 
-if torch.cuda.is_available():
-    from ..functions import MSDeformAttnFunction
-else:
-    MSDeformAttnFunction = None
 from ..functions.ms_deform_attn_func import ms_deform_attn_core_pytorch
 
 
@@ -156,19 +152,8 @@ class MSDeformAttn(nn.Module):
                     reference_points.shape[-1]
                 )
             )
-        if torch.cuda.is_available():
-            output = MSDeformAttnFunction.apply(
-                value,
-                input_spatial_shapes,
-                input_level_start_index,
-                sampling_locations,
-                attention_weights,
-                self.im2col_step,
-            )
-        else:
-            ## CPU
-            output = ms_deform_attn_core_pytorch(
-                value, input_spatial_shapes, sampling_locations, attention_weights
-            )
+        output = ms_deform_attn_core_pytorch(
+            value, input_spatial_shapes, sampling_locations, attention_weights
+        )
         output = self.output_proj(output)
         return output

@@ -1,3 +1,4 @@
+natten @ git+https://github.com/guillaume-rochette-oxb/NATTEN.git
 cityscapesscripts @ git+https://github.com/mcordts/cityscapesScripts.git
 cython
 diffdist
@@ -8,7 +9,6 @@ h5py
 icecream
 inflect
 mmcv
-natten @ git+https://github.com/guillaume-rochette-oxb/NATTEN.git
 panopticapi @ git+https://github.com/cocodataset/panopticapi.git
 pytorch_lightning
 regex

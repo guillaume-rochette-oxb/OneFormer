@@ -22,5 +22,4 @@ torchaudio
 torchvision
 tqdm
 wandb
---find-links https://shi-labs.com/natten/wheels
-natten==0.15.1
+natten @ git+https://github.com/guillaume-rochette-oxb/NATTEN.git

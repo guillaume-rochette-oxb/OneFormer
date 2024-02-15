@@ -22,5 +22,6 @@ torchaudio
 torchvision
 tqdm
 wandb
---find-links https://shi-labs.com/natten/wheels/
-natten==0.15.1+torch220cu121
+# --find-links https://shi-labs.com/natten/wheels/
+# natten==0.15.1+torch220cu121
+https://shi-labs.com/natten/wheels/cu121/torch2.2.0/natten-0.15.1%2Btorch220cu121-cp310-cp310-linux_x86_64.whl

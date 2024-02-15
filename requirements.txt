@@ -1,6 +1,3 @@
--f https://shi-labs.com/natten/wheels/
-natten==0.15.1+torch220cu121
-
 cityscapesscripts @ git+https://github.com/mcordts/cityscapesScripts.git
 cython
 diffdist
@@ -25,3 +22,5 @@ torchaudio
 torchvision
 tqdm
 wandb
+--find-links https://shi-labs.com/natten/wheels/
+natten==0.15.1+torch220cu121

@@ -22,5 +22,4 @@ torchaudio
 torchvision
 tqdm
 wandb
---find-links=https://shi-labs.com/natten/wheels
-natten==0.15.1
+natten==0.15.1 @ https://shi-labs.com/natten/wheels

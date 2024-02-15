@@ -1,4 +1,6 @@
-natten @ git+https://github.com/guillaume-rochette-oxb/NATTEN.git
+-f https://shi-labs.com/natten/wheels/
+natten==0.15.1+torch220cu121
+
 cityscapesscripts @ git+https://github.com/mcordts/cityscapesScripts.git
 cython
 diffdist

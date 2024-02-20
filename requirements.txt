@@ -22,4 +22,4 @@ torchaudio
 torchvision
 tqdm
 wandb
-natten
+natten @ git+https://github.com/guillaume-rochette-oxb/NATTEN.git

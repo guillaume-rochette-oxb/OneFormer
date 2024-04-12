@@ -11,10 +11,7 @@ import torch.nn as nn
 from timm.models.layers import DropPath
 from detectron2.modeling import BACKBONE_REGISTRY, Backbone, ShapeSpec
 
-
-try:
-    from natten import NeighborhoodAttention2D as NeighborhoodAttention
-except ImportError:
+def _install_natten():
     import shlex
     import subprocess
     import sys
@@ -34,8 +31,6 @@ except ImportError:
             shlex.split(f"{sys.executable} -m {BASE_COMMAND}"),
             check=True,
         )
-
-
 
 class ConvTokenizer(nn.Module):
     def __init__(self, in_chans=3, embed_dim=96, norm_layer=None):
@@ -126,6 +121,12 @@ class NATLayer(nn.Module):
         layer_scale=None,
     ):
         super().__init__()
+
+        try:
+            from natten import NeighborhoodAttention2D as NeighborhoodAttention
+        except ImportError:
+            _install_natten()
+
         self.dim = dim
         self.num_heads = num_heads
         self.mlp_ratio = mlp_ratio

@@ -11,7 +11,30 @@ import torch.nn as nn
 from timm.models.layers import DropPath
 from detectron2.modeling import BACKBONE_REGISTRY, Backbone, ShapeSpec
 
-from natten import NeighborhoodAttention2D as NeighborhoodAttention
+
+try:
+    from natten import NeighborhoodAttention2D as NeighborhoodAttention
+except ImportError:
+    import shlex
+    import subprocess
+    import sys
+
+    PACKAGE_NAME = "natten"
+    PACKAGE_ARCHIVE = "https://shi-labs.com/natten/wheels"
+    BASE_COMMAND = f"pip install natten"
+    ARGS = f"--find-links {PACKAGE_ARCHIVE}"
+
+    try:
+        subprocess.run(
+            shlex.split(f"{sys.executable} -m {BASE_COMMAND} {ARGS}"),
+            check=True,
+        )
+    except subprocess.CalledProcessError:
+        subprocess.run(
+            shlex.split(f"{sys.executable} -m {BASE_COMMAND}"),
+            check=True,
+        )
+
 
 
 class ConvTokenizer(nn.Module):

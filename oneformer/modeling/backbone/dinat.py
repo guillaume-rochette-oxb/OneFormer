@@ -126,6 +126,7 @@ class NATLayer(nn.Module):
             from natten import NeighborhoodAttention2D as NeighborhoodAttention
         except ImportError:
             _install_natten()
+            from natten import NeighborhoodAttention2D as NeighborhoodAttention
 
         self.dim = dim
         self.num_heads = num_heads
